@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bike 4T Engine Oil Blend Calculator</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#1a1d24; --card2:#20242d; --line:#2c313c;
+    --text:#e8eaed; --muted:#9aa0ab; --accent:#4ea1ff; --accent2:#36c08a;
+    --warn:#f0a64e; --bad:#ef5f6b; --good:#36c08a; --chip:#262b35;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f4f6f9; --card:#ffffff; --card2:#f0f3f7; --line:#e2e6ec;
+      --text:#1a1d24; --muted:#616975; --accent:#1f74d6; --accent2:#1f9e6e;
+      --warn:#c9820f; --bad:#d23c48; --good:#1f9e6e; --chip:#eef1f5;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px;line-height:1.45;padding:16px;}
+  .wrap{max-width:640px;margin:0 auto;}
+  h1{font-size:20px;margin:0 0 2px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+  input,select{width:100%;background:var(--card2);color:var(--text);border:1px solid var(--line);
+    border-radius:10px;padding:10px 11px;font-size:15px;-webkit-appearance:none;appearance:none;}
+  input:focus,select:focus{outline:none;border-color:var(--accent);}
+  .cap-row{display:flex;gap:10px;align-items:flex-end;}
+  .cap-row .f{flex:1;}
+  .seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .seg button{flex:1;background:transparent;border:0;color:var(--muted);padding:9px 6px;font-size:13px;cursor:pointer;}
+  .seg button.on{background:var(--accent);color:#fff;}
+  .oil{display:grid;grid-template-columns:1fr 92px 34px;gap:8px;align-items:end;margin-bottom:10px;}
+  .oil .rm{background:var(--chip);border:1px solid var(--line);color:var(--bad);border-radius:10px;
+    height:40px;font-size:20px;cursor:pointer;padding:0;}
+  .addbtn{width:100%;background:transparent;border:1px dashed var(--line);color:var(--accent);
+    border-radius:10px;padding:11px;font-size:14px;cursor:pointer;margin-top:2px;}
+  .addbtn:active{background:var(--card2);}
+  .summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:12px;}
+  .stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 6px;}
+  .stat .v{font-size:18px;font-weight:650;}
+  .stat .l{font-size:11px;color:var(--muted);margin-top:2px;}
+  .bar{height:14px;background:var(--card2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;}
+  .bar span{display:block;height:100%;}
+  .status{font-size:14px;font-weight:600;margin-top:10px;text-align:center;padding:9px;border-radius:10px;}
+  .s-good{background:rgba(54,192,138,.14);color:var(--good);}
+  .s-under{background:rgba(240,166,78,.14);color:var(--warn);}
+  .s-over{background:rgba(239,95,107,.14);color:var(--bad);}
+  .blend{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .blend .big{font-size:26px;font-weight:700;color:var(--accent);}
+  .blend .grade{font-size:22px;font-weight:700;color:var(--accent2);}
+  .mix{margin-top:10px;}
+  .mix .row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;}
+  .mix .dot{width:10px;height:10px;border-radius:3px;flex:none;}
+  .mix .pct{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .bands{margin-top:14px;border-top:1px solid var(--line);padding-top:10px;}
+  .bands-h{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+  .band{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid transparent;margin-bottom:4px;}
+  .band .band-l{font-weight:600;}
+  .band .band-r{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .band.on{background:rgba(54,192,138,.14);border-color:var(--accent2);}
+  .band.on .band-r{color:var(--accent2);}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .tag{font-size:11px;color:var(--muted);}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bike 4T Engine Oil Blend Calculator</h1>
+  <p class="sub">Four-stroke motorcycle oils with real datasheet viscosity (cSt @100°C) — Motul 7100 &amp; 5100, Castrol POWER1, Shell Advance Ultra. Blend estimated via the Refutas equation.</p>
+
+  <div class="card">
+    <div class="cap-row">
+      <div class="f">
+        <label>Total capacity</label>
+        <input id="cap" type="number" inputmode="decimal" value="1.3" step="0.1" min="0">
+      </div>
+      <div style="width:140px">
+        <label>Unit</label>
+        <div class="seg" id="unitSeg">
+          <button data-u="L" class="on">Litres</button>
+          <button data-u="ml">ml</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Oils in the mix</h2>
+    <div id="oils"></div>
+    <button class="addbtn" id="add">+ Add another oil</button>
+  </div>
+
+  <div class="card">
+    <div class="summary">
+      <div class="stat"><div class="v" id="sAdded">0</div><div class="l">Added</div></div>
+      <div class="stat"><div class="v" id="sCap">1.3</div><div class="l">Capacity</div></div>
+      <div class="stat"><div class="v" id="sLeft">1.3</div><div class="l">To fill</div></div>
+    </div>
+    <div class="bar" id="bar"></div>
+    <div class="status" id="status">Add oil to begin</div>
+  </div>
+
+  <div class="card">
+    <h2>Estimated blend</h2>
+    <div class="blend">
+      <div>
+        <div class="tag">Viscosity @100°C</div>
+        <div class="big" id="bCst">–</div>
+      </div>
+      <div style="text-align:right">
+        <div class="tag">SAE weight band</div>
+        <div class="grade" id="bGrade">–</div>
+      </div>
+    </div>
+    <div class="mix" id="mix"></div>
+    <div class="bands" id="bands"></div>
+    <p class="note">Viscosity figures are typical values from each maker's product data sheet (ASTM D445, 100°C); numbers vary by market and formulation revision. The result estimates the warm (100°C) viscosity of the mixture — it does not predict the cold-start "W" rating or the wet-clutch friction (JASO MA/MA2) rating. Motul, Castrol and Shell all state their bike oils may be mixed, but blending full- and semi-synthetic also averages their additive packs; for best results use one full fill of a single grade.</p>
+  </div>
+</div>
+
+<script>
+// Kinematic viscosity at 100C (cSt, ASTM D445), from manufacturer product data sheets (4-stroke motorcycle oils).
+const GRADES = [
+  // Motul 7100 4T — 100% Synthetic (Ester)
+  {id:"m7_10w30", grp:"Motul 7100 — 100% Synthetic", label:"7100 10W-30", v:10.5},
+  {id:"m7_10w40", grp:"Motul 7100 — 100% Synthetic", label:"7100 10W-40", v:13.2},
+  {id:"m7_10w50", grp:"Motul 7100 — 100% Synthetic", label:"7100 10W-50", v:17.9},
+  {id:"m7_15w50", grp:"Motul 7100 — 100% Synthetic", label:"7100 15W-50", v:18.0},
+  {id:"m7_10w60", grp:"Motul 7100 — 100% Synthetic", label:"7100 10W-60", v:23.9},
+  // Motul 5100 4T — Semi-Synthetic (Technosynthese + Ester)
+  {id:"m5_10w40", grp:"Motul 5100 — Semi-Synthetic", label:"5100 10W-40", v:14.0},
+  {id:"m5_15w50", grp:"Motul 5100 — Semi-Synthetic", label:"5100 15W-50", v:18.3},
+  // Castrol POWER1 ULTIMATE 4T — Full Synthetic
+  {id:"cu_10w40", grp:"Castrol POWER1 Ultimate — Full Synthetic", label:"POWER1 Ultimate 10W-40", v:14.1},
+  {id:"cu_10w60", grp:"Castrol POWER1 Ultimate — Full Synthetic", label:"POWER1 Ultimate 10W-60", v:23.4},
+  // Castrol POWER1 4T — Synthetic Technology (part/semi synthetic)
+  {id:"cp_10w40", grp:"Castrol POWER1 — Semi-Synthetic", label:"POWER1 10W-40", v:13.5},
+  // Shell Advance 4T Ultra — 100% Synthetic (PurePlus)
+  {id:"su_10w40", grp:"Shell Advance Ultra — 100% Synthetic", label:"Advance Ultra 10W-40", v:14.2},
+  {id:"su_15w50", grp:"Shell Advance Ultra — 100% Synthetic", label:"Advance Ultra 15W-50", v:20.5},
+  // TVS TRU4 Synthetic — Full Synthetic (10W-30 API SL / JASO MA2). TVS publishes no datasheet; KV100 from independent lab test (The Sportztourer): 10.19 cSt @100C, 67.35 @40C.
+  {id:"tvs_syn_10w30", grp:"TVS TRU4 — Full Synthetic", label:"TRU4 Synthetic 10W-30", v:10.19},
+];
+const COLORS = ["#4ea1ff","#36c08a","#f0a64e","#ef5f6b","#b98cff","#4dd0e1","#ffd166","#9ccc65"];
+
+let unit = "L";
+let oils = [
+  {id:"m7_10w40", qty:0.7},
+  {id:"m5_10w40", qty:0.6},
+];
+
+const $ = id => document.getElementById(id);
+
+// Refutas viscosity blending
+function vbi(v){ return 14.534*Math.log(Math.log(v+0.8))+10.975; }
+function invVbi(b){ return Math.exp(Math.exp((b-10.975)/14.534))-0.8; }
+function grfrom(id){ return GRADES.find(x=>x.id===id) || GRADES[0]; }
+
+// SAE J300 high-temperature (100C) kinematic-viscosity bands shown in the legend
+const BANDS=[["SAE 30",9.3,12.5],["SAE 40",12.5,16.3],["SAE 50",16.3,21.9],["SAE 60",21.9,26.1]];
+function renderBands(cst){
+  const box=$("bands"); if(!box) return;
+  box.innerHTML='<div class="bands-h">SAE weight bands (cSt @100°C)</div>';
+  BANDS.forEach(b=>{
+    const active = cst!=null && cst>=b[1] && cst<b[2];
+    const r=document.createElement("div"); r.className="band"+(active?" on":"");
+    r.innerHTML=`<span class="band-l">${b[0]}</span><span class="band-r">${b[1]} – ${b[2]} cSt</span>`;
+    box.appendChild(r);
+  });
+}
+
+// closest SAE high-temp grade (second number) per SAE J300 KV100 bands
+function saeBand(cst){
+  const bands=[[6.1,8.2,"16"],[8.2,9.3,"20"],[9.3,12.5,"30"],[12.5,16.3,"40"],[16.3,21.9,"50"],[21.9,26.1,"60"]];
+  for(const b of bands){ if(cst>=b[0] && cst<b[1]) return "SAE "+b[2]; }
+  return cst<6.1 ? "below 16" : "SAE 60+";
+}
+
+function toL(x){ return unit==="L" ? x : x/1000; }
+function fromL(x){ return unit==="L" ? x : x*1000; }
+function fmt(x){ return unit==="L" ? (Math.round(x*1000)/1000) : Math.round(x); }
+
+function optionsHtml(selId){
+  let html="", cur=null;
+  GRADES.forEach(x=>{
+    if(x.grp!==cur){ if(cur!==null) html+="</optgroup>"; html+=`<optgroup label="${x.grp}">`; cur=x.grp; }
+    html+=`<option value="${x.id}" ${x.id===selId?"selected":""}>${x.label} — ${x.v} cSt</option>`;
+  });
+  html+="</optgroup>";
+  return html;
+}
+
+function renderOils(){
+  const box = $("oils"); box.innerHTML="";
+  oils.forEach((o,i)=>{
+    const row=document.createElement("div"); row.className="oil";
+    row.innerHTML=`
+      <div><label>Oil ${i+1}</label><select data-i="${i}" class="gsel">${optionsHtml(o.id)}</select></div>
+      <div><label>Qty (${unit})</label><input data-i="${i}" class="qin" type="number" inputmode="decimal" step="${unit==='L'?0.05:50}" min="0" value="${fmt(fromL(o.qty))}"></div>
+      <div><button class="rm" data-i="${i}" title="Remove">×</button></div>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll(".gsel").forEach(s=>s.onchange=e=>{oils[+e.target.dataset.i].id=e.target.value;calc();});
+  box.querySelectorAll(".qin").forEach(s=>s.oninput=e=>{oils[+e.target.dataset.i].qty=toL(parseFloat(e.target.value)||0);calc();});
+  box.querySelectorAll(".rm").forEach(b=>b.onclick=e=>{oils.splice(+e.target.dataset.i,1);renderOils();calc();});
+}
+
+function calc(){
+  const cap = parseFloat($("cap").value)||0;
+  const capL = toL(cap);
+  let totalL = oils.reduce((a,o)=>a+(o.qty||0),0);
+  $("sAdded").textContent = fmt(fromL(totalL));
+  $("sCap").textContent = fmt(cap);
+  const leftL = capL-totalL;
+  $("sLeft").textContent = fmt(fromL(leftL));
+
+  const bar=$("bar"); bar.innerHTML="";
+  oils.forEach((o,i)=>{
+    if(o.qty>0 && capL>0){
+      const s=document.createElement("span");
+      s.style.width=Math.min(100,(o.qty/capL)*100)+"%";
+      s.style.background=COLORS[i%COLORS.length];
+      bar.appendChild(s);
+    }
+  });
+
+  const st=$("status"); const tol=capL*0.01+0.005;
+  if(totalL<=0){ st.className="status s-under"; st.textContent="Add oil to begin"; }
+  else if(Math.abs(leftL)<=tol){ st.className="status s-good"; st.textContent="✓ Full — matches capacity"; }
+  else if(leftL>0){ st.className="status s-under"; st.textContent=`Need ${fmt(fromL(leftL))} ${unit} more to reach capacity`; }
+  else { st.className="status s-over"; st.textContent=`Over by ${fmt(fromL(-leftL))} ${unit}`; }
+
+  if(totalL>0){
+    let b=0;
+    oils.forEach(o=>{ if(o.qty>0){ const f=o.qty/totalL; b+=f*vbi(grfrom(o.id).v); } });
+    const cst=invVbi(b);
+    $("bCst").textContent=(Math.round(cst*10)/10)+" cSt";
+    $("bGrade").textContent="≈ "+saeBand(cst);
+    renderBands(cst);
+  } else { $("bCst").textContent="–"; $("bGrade").textContent="–"; renderBands(null); }
+
+  const mix=$("mix"); mix.innerHTML="";
+  oils.forEach((o,i)=>{
+    if(o.qty>0){
+      const f=totalL>0?(o.qty/totalL*100):0;
+      const r=document.createElement("div"); r.className="row";
+      r.innerHTML=`<span class="dot" style="background:${COLORS[i%COLORS.length]}"></span>
+        <span>${grfrom(o.id).label}</span>
+        <span class="pct">${fmt(fromL(o.qty))} ${unit} · ${Math.round(f)}%</span>`;
+      mix.appendChild(r);
+    }
+  });
+}
+
+$("add").onclick=()=>{ oils.push({id:"m7_10w40",qty:0}); renderOils(); calc(); };
+$("cap").oninput=calc;
+$("unitSeg").querySelectorAll("button").forEach(b=>{
+  b.onclick=()=>{
+    const nu=b.dataset.u; if(nu===unit) return;
+    const cap=parseFloat($("cap").value)||0;
+    $("cap").value = nu==="ml" ? Math.round(cap*1000) : Math.round(cap/1000*1000)/1000;
+    $("cap").step = nu==="ml" ? 50 : 0.1;
+    unit=nu;
+    $("unitSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.u===nu));
+    renderOils(); calc();
+  };
+});
+
+renderOils(); calc();
+</script>
+</body>
+</html>
